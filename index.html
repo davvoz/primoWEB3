@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esempio web 3</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #282c34;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 3em;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #61dafb;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+            animation: pulse 1s infinite alternate;
+        }
+
+        p {
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #ffffff;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            animation: glow 1s infinite alternate;
+        }
+
+        #message {
+            font-size: 1.2em;
+            font-style: italic;
+            margin-bottom: 30px;
+            color: #61dafb;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 1s ease;
+        }
+
+        #account {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #61dafb;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            animation: slideInLeft 1s ease;
+        }
+
+        #balanceWei,
+        #balanceEther,
+        #balanceEuro {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #61dafb;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            animation: slideInRight 1s ease;
+        }
+
+        button {
+            background-color: #61dafb;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            outline: none;
+            animation: bounce 1s infinite alternate;
+        }
+
+        button:hover {
+            background-color: #0a75bc;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="welcomeMessage">Welcome to Ethereum</h1>
+    <p id="instructionMessage">Connect your MetaMask wallet to get started</p>
+    <button id="connectButton" class="animate__animated animate__fadeInUp">Connect to MetaMask</button>
+    <div id="account" class="animate__animated animate__slideInLeft"></div>
+    <div id="balanceWei" class="animate__animated animate__slideInRight"></div>
+    <div id="balanceEther" class="animate__animated animate__slideInRight"></div>
+    <div id="balanceEuro" class="animate__animated animate__slideInRight"></div>
+    <div id="message" class="animate__animated animate__fadeInUp"></div>
+
+    <script>
+        document.getElementById('connectButton').addEventListener('click', async () => {
+            console.log('connectButton clicked');
+            const priceApiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=eur';
+            try {
+                console.log('connecting to ethereum');
+                if (window.ethereum) {
+                    console.log('window.ethereum detected');
+                    window.web3 = new Web3(window.ethereum);
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const selectedAddress = accounts[0];
+                    document.getElementById('account').innerText = `${selectedAddress} is connected`;
+
+                    const balance = await window.web3.eth.getBalance(selectedAddress);
+                    document.getElementById('balanceWei').innerText = `${balance} in wei`;
+
+                    const balanceInEther = window.web3.utils.fromWei(balance, 'ether');
+                    document.getElementById('balanceEther').innerText = `${balanceInEther} in ether`;
+
+                    const response = await fetch(priceApiUrl);
+                    const { ethereum: { eur } } = await response.json();
+                    document.getElementById('balanceEuro').innerText = `${eur * balanceInEther} in euro`;
+                    document.getElementById('message').innerText = 'Connected!';
+
+                    // Nascondi il bottone dopo la connessione
+                    document.getElementById('connectButton').classList.add('hidden');
+
+                    // Aggiorna il testo di benvenuto e di istruzione dopo la connessione
+                    document.getElementById('welcomeMessage').innerText = 'Welcome, Crypto Maestro!';
+                    document.getElementById('instructionMessage').innerText = 'You\'re now ready to dive into the Ethereum universe';
+
+                    
+                } else if (window.web3) {
+                    console.log('window.web3 detected');
+                    window.web3 = new Web3(window.web3.currentProvider);
+                    document.getElementById('message').innerText = 'Legacy dapp browsers detected';
+                } else {
+                    console.log('no web3 detected');
+                    document.getElementById('message').innerText = 'Non-Ethereum browser detected. You should consider installing MetaMask!';
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('message').innerText = `An error occurred: ${error.message}`;
+            }
+        });
+
+    </script>
+</body>
+
+</html>
